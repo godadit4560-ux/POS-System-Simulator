@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>POS System</title>
+
+<style>
+
+*{box-sizing:border-box;font-family:Segoe UI;margin:0}
+
+body{
+background:linear-gradient(135deg,#1f2a38,#34495e);
+color:white;
+height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+justify-content:center;
+gap:10px;
+padding:15px;
+background:#00000050;
+}
+
+.header input{
+padding:10px;
+border-radius:8px;
+border:none;
+}
+
+.header button{
+padding:10px 15px;
+border:none;
+background:#00e6b8;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* MAIN */
+
+.container{
+flex:1;
+display:flex;
+gap:20px;
+padding:20px;
+}
+
+/* PRODUCTS */
+
+.products-panel{
+width:45%;
+background:#ffffff10;
+border-radius:15px;
+padding:20px;
+display:flex;
+flex-direction:column;
+}
+
+.products{
+flex:1;
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+gap:12px;
+overflow:auto;
+}
+
+.card{
+background:#ffffff15;
+padding:10px;
+border-radius:10px;
+text-align:center;
+cursor:grab;
+}
+
+.card:hover{background:#ffffff25}
+
+/* ADD PRODUCT */
+
+.add-product{
+margin-top:20px;
+background:#566273;
+padding:25px;
+border-radius:20px;
+display:flex;
+flex-direction:column;
+gap:20px;
+}
+
+.add-product h2{color:#1ef5c8}
+
+.add-product input{
+padding:18px;
+border:none;
+border-radius:18px;
+font-size:18px;
+background:#c8d2df;
+}
+
+.upload-btn{
+background:#34495e;
+padding:18px;
+border-radius:18px;
+text-align:center;
+cursor:pointer;
+}
+
+.upload-btn input{display:none}
+
+.add-btn{
+background:linear-gradient(90deg,#19e5b3,#13cfa3);
+padding:20px;
+border:none;
+border-radius:18px;
+font-size:20px;
+cursor:pointer;
+}
+
+/* ORDER */
+
+.cart-panel{
+width:55%;
+background:#ffffff10;
+border-radius:15px;
+padding:20px;
+display:flex;
+flex-direction:column;
+}
+
+.cart{
+flex:1;
+border:2px dashed #ffffff40;
+padding:10px;
+border-radius:10px;
+overflow:auto;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+padding:8px;
+background:#ffffff15;
+border-radius:6px;
+margin-bottom:6px;
+}
+
+.qty button{margin:0 4px}
+
+.total{
+margin-top:10px;
+font-size:22px;
+color:#00ffd0;
+}
+
+/* BUTTONS */
+
+.payments button{
+margin-top:10px;
+margin-right:8px;
+padding:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.cash{background:#27ae60}
+.cardpay{background:#3498db}
+.upi{background:#8e44ad}
+
+/* POPUPS */
+
+.popup{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000000cc;
+justify-content:center;
+align-items:center;
+}
+
+.popup-box{
+background:white;
+color:black;
+padding:20px;
+border-radius:10px;
+text-align:center;
+}
+
+.note{
+background:#2ecc71;
+padding:10px;
+color:white;
+border-radius:6px;
+cursor:grab;
+margin:5px;
+display:inline-block;
+}
+
+/* QR STYLE */
+
+.qr{
+width:180px;
+height:180px;
+background:
+repeating-linear-gradient(90deg,#000 0 10px,#fff 10px 20px),
+repeating-linear-gradient(#000 0 10px,#fff 10px 20px);
+margin:auto;
+}
+
+/* SUCCESS */
+
+.success{
+font-size:60px;
+color:#2ecc71;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<input id="companyName" placeholder="Company Name">
+<input id="phoneNumber" placeholder="Customer Phone">
+<button onclick="saveStore()">Save</button>
+</div>
+
+<div class="container">
+
+<div class="products-panel">
+
+<h2>Products</h2>
+
+<div class="products" id="products"></div>
+
+<div class="add-product">
+
+<h2>Add Product</h2>
+
+<input id="name" placeholder="Product Name">
+<input id="price" type="number" placeholder="Price">
+
+<label class="upload-btn">
+Upload Image
+<input id="image" type="file">
+</label>
+
+<button class="add-btn" onclick="addProduct()">Add Product</button>
+
+</div>
+
+</div>
+
+<div class="cart-panel">
+
+<h2>Order</h2>
+
+<div class="cart" id="cart"
+ondragover="event.preventDefault()"
+ondrop="dropItem(event)">
+Drag products here
+</div>
+
+<div class="total">₹ <span id="total">0</span></div>
+
+<div class="payments">
+<button class="cash" onclick="openCash()">Cash</button>
+<button class="cardpay" onclick="openCard()">Card</button>
+<button class="upi" onclick="openUPI()">UPI</button>
+</div>
+
+</div>
+</div>
+
+<!-- CASH -->
+
+<div id="cashPopup" class="popup">
+<div class="popup-box">
+
+<h3>Insert Cash</h3>
+
+<div class="note" draggable="true" data-value="100" ondragstart="dragMoney(event)">₹100</div>
+<div class="note" draggable="true" data-value="500" ondragstart="dragMoney(event)">₹500</div>
+
+<div id="cashBox"
+style="border:2px dashed black;padding:20px;margin-top:10px"
+ondragover="event.preventDefault()"
+ondrop="addMoney(event)">
+Drop money here
+</div>
+
+<p>Paid: ₹ <span id="paid">0</span></p>
+
+</div>
+</div>
+
+<!-- CARD -->
+
+<div id="cardPopup" class="popup">
+<div class="popup-box">
+
+<h3>Swipe Card</h3>
+
+<p>Swipe Count: <span id="swipes">0</span>/3</p>
+
+<button onclick="swipeCard()">Swipe</button>
+
+</div>
+</div>
+
+<!-- UPI -->
+
+<div id="upiPopup" class="popup">
+<div class="popup-box">
+
+<h3>Scan UPI</h3>
+
+<div class="qr"></div>
+
+<br>
+
+<button onclick="upiSuccess()">Paid</button>
+
+</div>
+</div>
+
+<!-- RECEIPT -->
+
+<div id="receiptPopup" class="popup">
+<div class="popup-box">
+
+<h3>Receipt</h3>
+
+<div id="receiptContent"></div>
+
+<br>
+
+<button onclick="downloadReceipt()">Download</button>
+
+</div>
+</div>
+
+<script>
+
+let products=[]
+let cart={}
+let paid=0
+let swipeCount=0
+let receiptHTML=""
+
+/* STORE */
+
+function saveStore(){
+localStorage.setItem("company",companyName.value)
+localStorage.setItem("phone",phoneNumber.value)
+}
+
+/* PRODUCT */
+
+function addProduct(){
+
+let name=document.getElementById("name").value
+let price=parseFloat(document.getElementById("price").value)
+let img=document.getElementById("image")
+
+if(!name||!price||!img.files[0]) return alert("Fill fields")
+
+let reader=new FileReader()
+
+reader.onload=function(e){
+
+products.push({
+id:Date.now(),
+name:name,
+price:price
+})
+
+renderProducts()
+
+}
+
+reader.readAsDataURL(img.files[0])
+
+}
+
+function renderProducts(){
+
+let container=document.getElementById("products")
+container.innerHTML=""
+
+products.forEach(p=>{
+
+let div=document.createElement("div")
+div.className="card"
+div.draggable=true
+
+div.ondragstart=(e)=>e.dataTransfer.setData("id",p.id)
+
+div.innerHTML=`${p.name}<br>₹${p.price}`
+
+container.appendChild(div)
+
+})
+
+}
+
+/* CART */
+
+function dropItem(e){
+
+let id=e.dataTransfer.getData("id")
+let product=products.find(p=>p.id==id)
+
+if(!cart[id]) cart[id]={...product,qty:1}
+else cart[id].qty++
+
+renderCart()
+
+}
+
+function renderCart(){
+
+let cartDiv=document.getElementById("cart")
+cartDiv.innerHTML=""
+
+let total=0
+
+for(let id in cart){
+
+let item=cart[id]
+let price=item.price*item.qty
+
+total+=price
+
+let row=document.createElement("div")
+row.className="row"
+
+row.innerHTML=`
+<span>${item.name}</span>
+<span class="qty">
+<button onclick="changeQty(${id},-1)">-</button>
+${item.qty}
+<button onclick="changeQty(${id},1)">+</button>
+</span>
+<span>₹${price}</span>
+`
+
+cartDiv.appendChild(row)
+
+}
+
+document.getElementById("total").innerText=total
+
+}
+
+function changeQty(id,a){
+
+cart[id].qty+=a
+if(cart[id].qty<=0) delete cart[id]
+
+renderCart()
+
+}
+
+/* CASH */
+
+function openCash(){
+
+paid=0
+paid.innerText=0
+
+cashPopup.style.display="flex"
+
+}
+
+function dragMoney(e){
+e.dataTransfer.setData("value",e.target.dataset.value)
+}
+
+function addMoney(e){
+
+let value=parseInt(e.dataTransfer.getData("value"))
+
+paid+=value
+
+document.getElementById("paid").innerText=paid
+
+let total=parseInt(document.getElementById("total").innerText)
+
+if(paid>=total){
+
+let change=paid-total
+
+cashPopup.style.display="none"
+
+generateBill("Cash",change)
+
+}
+
+}
+
+/* CARD */
+
+function openCard(){
+
+swipeCount=0
+swipes.innerText=0
+
+cardPopup.style.display="flex"
+
+}
+
+function swipeCard(){
+
+swipeCount++
+
+swipes.innerText=swipeCount
+
+if(swipeCount<3){
+
+alert("Swipe Failed")
+
+}else{
+
+cardPopup.style.display="none"
+
+generateBill("Card",0)
+
+}
+
+}
+
+/* UPI */
+
+function openUPI(){
+
+upiPopup.style.display="flex"
+
+}
+
+function upiSuccess(){
+
+upiPopup.innerHTML=`
+<div class="popup-box">
+<div class="success">✔</div>
+<h3>Payment Successful</h3>
+</div>
+`
+
+setTimeout(()=>{
+upiPopup.style.display="none"
+generateBill("UPI",0)
+},1500)
+
+}
+
+/* BILL */
+
+function generateBill(method,change){
+
+let total=document.getElementById("total").innerText
+let company=localStorage.getItem("company")||"Company"
+
+let now=new Date()
+
+receiptHTML=`
+<h3>${company}</h3>
+Date: ${now.toLocaleDateString()}<br>
+Time: ${now.toLocaleTimeString()}<br>
+<hr>
+Total: ₹${total}<br>
+Payment: ${method}<br>
+`
+
+if(change>0){
+receiptHTML+=`Change Given: ₹${change}<br>`
+}
+
+receiptHTML+=`<hr>Company Number: 9116799332`
+
+document.getElementById("receiptContent").innerHTML=receiptHTML
+
+receiptPopup.style.display="flex"
+
+}
+
+/* DOWNLOAD */
+
+function downloadReceipt(){
+
+let blob=new Blob([receiptHTML],{type:"text/html"})
+let link=document.createElement("a")
+
+link.href=URL.createObjectURL(blob)
+link.download="receipt.html"
+
+link.click()
+
+receiptPopup.style.display="none"
+
+}
+
+</script>
+</body>
+</html>
